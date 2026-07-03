@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>玩家统计 · 边缘天空 RimSky Craft</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.demo-banner{max-width:920px;margin:18px auto -30px;padding:10px 20px;font-size:13.5px;
+  color:var(--dawn);background:rgba(255,182,92,.06);border:1px dashed var(--dawn);border-radius:8px}
+.toolbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:30px}
+.toolbar input{flex:1;min-width:200px;padding:10px 16px;font-size:15px;font-family:var(--sans);
+  color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.toolbar input::placeholder{color:var(--muted)}
+.toolbar input:focus{outline:2px solid var(--sky);outline-offset:1px}
+.gen{color:var(--muted);font-size:13px}
+/* 头像墙 */
+.heads{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:18px}
+.head{display:flex;flex-direction:column;align-items:center;gap:9px;padding:16px 6px 13px;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--text);
+  transition:border-color .15s,transform .15s}
+.head:hover{border-color:var(--sky);transform:translateY(-2px);color:var(--text)}
+.head img{width:56px;height:56px;border-radius:6px;image-rendering:pixelated;
+  box-shadow:0 3px 10px rgba(0,0,0,.4)}
+.head .hn{font-size:13px;letter-spacing:.02em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.head .hh{font-size:11.5px;color:var(--muted)}
+/* 个人页 */
+.pv-top{display:flex;gap:22px;align-items:center;margin-bottom:34px}
+.pv-top img{width:88px;height:88px;border-radius:10px;image-rendering:pixelated;
+  box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.pv-top h1{font-size:clamp(26px,4vw,36px)}
+.pv-top h1::after{display:none}
+.pv-top .meta{color:var(--muted);font-size:14px;margin-top:6px}
+.backlink{display:inline-block;margin:0 0 20px;font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;text-align:center}
+.tile .v{font-family:var(--serif);font-size:23px;color:var(--sky)}
+.tile .k{color:var(--muted);font-size:12.5px;letter-spacing:.1em;margin-top:2px}
+/* 甜甜圈图 */
+.mine-wrap{display:flex;gap:44px;align-items:center;flex-wrap:wrap}
+.donut{flex:0 0 auto}
+.legend{flex:1;min-width:250px;display:grid;gap:8px}
+.leg{display:grid;grid-template-columns:14px 1fr 62px 72px;gap:12px;align-items:center;font-size:13.5px}
+.leg .dot{width:12px;height:12px;border-radius:3px}
+.leg .ln{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leg .lp{color:var(--sky);font-family:var(--mono);font-size:12.5px;text-align:right}
+.leg .lv{color:var(--muted);font-family:var(--mono);font-size:12px;text-align:right}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:4px 14px;
+  font-size:13px;color:var(--body)}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <span class="brand">边缘<b>天空</b> · RimSky Craft</span>
+    <ul>
+      <li><a href="index.html">首页</a></li>
+      <li><a href="join.html">加入</a></li>
+      <li><a href="rules.html">服规</a></li>
+      <li><a href="help.html">帮助</a></li>
+      <li><a href="stats.html" class="on">统计</a></li>
+      <li><a href="contact.html">联系</a></li>
+      <li><a href="https://map.letscode.club/" target="_blank" rel="noopener">动态地图 ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div id="demoBanner" class="demo-banner hidden">这里展示的是<b>演示数据</b>——接入服务器的定时导出后，此页会自动换成全体玩家的真实生涯记录（头像即为玩家皮肤）。</div>
+
+<header class="page" id="listHead">
+  <h1>玩家统计</h1>
+  <p>这片天空下每个人的生涯记录，来自世界本身的记忆。点击头像查看详情。</p>
+</header>
+
+<main>
+<section id="listView">
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="搜索玩家名…" aria-label="搜索玩家名">
+    <span class="gen" id="genTime"></span>
+  </div>
+  <div class="heads" id="heads"></div>
+</section>
+
+<section id="playerView" class="hidden">
+  <a class="backlink" href="stats.html">← 返回玩家列表</a>
+  <div class="pv-top">
+    <img id="pvAvatar" alt="" width="88" height="88">
+    <div>
+      <h1 id="pvName"></h1>
+      <div class="meta" id="pvMeta"></div>
+    </div>
+  </div>
+  <div class="tiles" id="tiles"></div>
+  <h2 style="margin-top:44px">挖掘分布</h2>
+  <p class="sub">最常挖掘的方块占比</p>
+  <div class="mine-wrap">
+    <svg id="donut" class="donut" width="210" height="210" viewBox="0 0 210 210" role="img" aria-label="挖掘分布图"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
+  <h2 style="margin-top:48px">最近达成的成就</h2>
+  <p class="sub" id="advCount"></p>
+  <div class="chips" id="chips"></div>
+</section>
+</main>
+
+<footer>
+  <div class="horizon" aria-hidden="true"></div>
+  <p>边缘天空 RimSky Craft · Minecraft Java 版 1.21.11</p>
+  <p>统计数据来自原版世界记录，定时更新。头像服务由 Crafatar 提供。</p>
+</footer>
+
+<script src="data/zh_names.js"></script>
+<script src="data/stats_data.js"></script>
+<script>
+(function(){
+  "use strict";
+  var FALLBACK = "data:image/svg+xml," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56"><rect width="56" height="56" rx="6" fill="#22304B"/><rect x="14" y="14" width="28" height="28" rx="3" fill="#4FA3FF" opacity=".55"/></svg>');
+  function avatar(uuid, size){
+    return "https://crafatar.com/avatars/" + uuid.replace(/-/g,"") + "?size=" + size + "&overlay";
+  }
+  var D = window.RIMSTATS;
+  if (!D || !D.players) {
+    document.getElementById("heads").innerHTML =
+      '<p style="color:var(--muted)">统计数据尚未生成，请稍后再来。</p>';
+    return;
+  }
+  if (D.demo) document.getElementById("demoBanner").classList.remove("hidden");
+  document.getElementById("genTime").textContent = "数据更新于 " + D.generated;
+
+  // 官方译名表(取自 1.21.11 客户端 zh_cn.json,见 data/zh_names.js)
+  var NAMES = window.RIMZH || {adv:{}, block:{}};
+  var PALETTE = ["#4FA3FF","#FFB65C","#6EDB8F","#B58CFF","#FF8FA3",
+                 "#5CD6D6","#F2E85C","#FF9C5C","#8FB8FF","#C9A0FF"];
+  function zh(k){ return NAMES.block[k] || k.replace(/_/g," "); }
+  function zhAdv(k){ return NAMES.adv[k] || k.replace(/^.*\//,"").replace(/_/g," "); }
+  function fmt(n){ return Number(n).toLocaleString("zh-CN"); }
+  function esc(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+  var uuid = new URLSearchParams(location.search).get("p");
+  var player = uuid ? D.players.find(function(p){ return p.uuid === uuid; }) : null;
+  if (player) renderPlayer(player); else renderList();
+
+  function renderList(){
+    var box = document.getElementById("heads");
+    function draw(filter){
+      var f = (filter||"").toLowerCase();
+      box.innerHTML = D.players.filter(function(p){
+        return !f || p.name.toLowerCase().indexOf(f) >= 0;
+      }).map(function(p){
+        return '<a class="head" href="stats.html?p='+encodeURIComponent(p.uuid)+'">'
+          + '<img loading="lazy" width="56" height="56" src="'+avatar(p.uuid,56)+'"'
+          + ' onerror="this.onerror=null;this.src=\''+FALLBACK+'\'" alt="">'
+          + '<span class="hn">'+esc(p.name)+'</span>'
+          + '<span class="hh">'+p.playtime_hours+' 小时</span></a>';
+      }).join("") || '<p style="color:var(--muted)">没有匹配的玩家。</p>';
+    }
+    draw("");
+    document.getElementById("search").addEventListener("input", function(e){ draw(e.target.value); });
+  }
+
+  function renderPlayer(p){
+    document.getElementById("listView").classList.add("hidden");
+    document.getElementById("listHead").classList.add("hidden");
+    document.getElementById("playerView").classList.remove("hidden");
+    document.title = p.name + " · 玩家统计 · 边缘天空";
+    var av = document.getElementById("pvAvatar");
+    av.src = avatar(p.uuid, 88);
+    av.onerror = function(){ this.onerror=null; this.src=FALLBACK; };
+    document.getElementById("pvName").textContent = p.name;
+    document.getElementById("pvMeta").textContent = "最近在线 " + p.last_seen;
+
+    var tiles = [
+      [p.playtime_hours, "游玩小时"], [p.advancements_done, "成就达成"],
+      [fmt(p.mined_total), "方块挖掘"], [fmt(p.placed_total), "方块使用"],
+      [fmt(p.mob_kills), "生物击杀"], [p.deaths, "死亡次数"],
+      [p.walk_km + " km", "行走距离"], [p.player_kills, "玩家击杀"]];
+    document.getElementById("tiles").innerHTML = tiles.map(function(t){
+      return '<div class="tile"><div class="v">'+t[0]+'</div><div class="k">'+t[1]+'</div></div>';
+    }).join("");
+
+    // 甜甜圈:前8名+其它
+    var top = p.mined_top.slice(0, 8);
+    var shownSum = top.reduce(function(s, r){ return s + r[1]; }, 0);
+    var other = Math.max(0, p.mined_total - shownSum);
+    var segs = top.map(function(r, i){ return {n: zh(r[0]), v: r[1], c: PALETTE[i]}; });
+    if (other > 0) segs.push({n: "其它", v: other, c: "#3A4A68"});
+    drawDonut(segs, p.mined_total);
+
+    document.getElementById("advCount").textContent = "共达成 " + p.advancements_done + " 项成就，最近的一批：";
+    document.getElementById("chips").innerHTML = p.adv_recent.map(function(a){
+      return '<span class="chip">'+esc(zhAdv(a))+'</span>';
+    }).join("") || '<span style="color:var(--muted)">暂无</span>';
+  }
+
+  function drawDonut(segs, total){
+    var svg = document.getElementById("donut");
+    var R = 78, CX = 105, CY = 105, C = 2 * Math.PI * R;
+    var html = "", offset = 0;
+    segs.forEach(function(s){
+      var frac = total ? s.v / total : 0;
+      var len = frac * C;
+      html += '<circle r="'+R+'" cx="'+CX+'" cy="'+CY+'" fill="none"'
+        + ' stroke="'+s.c+'" stroke-width="30"'
+        + ' stroke-dasharray="'+Math.max(0,len-1.5)+' '+(C-len+1.5)+'"'
+        + ' stroke-dashoffset="'+(-offset)+'" transform="rotate(-90 '+CX+' '+CY+')"/>';
+      offset += len;
+    });
+    html += '<text x="'+CX+'" y="'+(CY-4)+'" text-anchor="middle" fill="#E8EEF7"'
+      + ' font-family="var(--serif)" font-size="21">'+fmt(total)+'</text>';
+    html += '<text x="'+CX+'" y="'+(CY+18)+'" text-anchor="middle" fill="#93A7C4" font-size="11.5">总挖掘</text>';
+    svg.innerHTML = html;
+    document.getElementById("legend").innerHTML = segs.map(function(s){
+      var pct = total ? (s.v / total * 100).toFixed(1) : "0.0";
+      return '<div class="leg"><span class="dot" style="background:'+s.c+'"></span>'
+        + '<span class="ln">'+esc(s.n)+'</span><span class="lp">'+pct+'%</span>'
+        + '<span class="lv">'+fmt(s.v)+'</span></div>';
+    }).join("");
+  }
+})();
+</script>
+</body>
+</html>

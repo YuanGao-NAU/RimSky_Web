@@ -1,0 +1,111 @@
+/* ===== RimSky Craft · 边缘天空 —— 夜穹主题 v2 ===== */
+:root{
+  --night:#0B1220;--panel:#141D30;--line:#22304B;
+  --sky:#4FA3FF;--dawn:#FFB65C;--text:#E8EEF7;--muted:#93A7C4;--body:#B9C7DD;
+  --serif:"Noto Serif SC","Source Han Serif SC","STSong","SimSun",serif;
+  --sans:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--night);color:var(--text);font-family:var(--sans);line-height:1.85;font-size:16px}
+a{color:var(--sky);text-decoration:none}
+a:hover{color:var(--dawn)}
+a:focus-visible{outline:2px solid var(--dawn);outline-offset:3px;border-radius:2px}
+
+nav{position:sticky;top:0;z-index:10;background:rgba(11,18,32,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:920px;margin:0 auto;padding:14px 20px;display:flex;align-items:baseline;gap:24px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:19px;letter-spacing:.06em;color:var(--text)}
+.brand b{color:var(--sky)}
+nav ul{display:flex;gap:20px;list-style:none;margin-left:auto;flex-wrap:wrap}
+nav ul a{color:var(--muted);font-size:14px;letter-spacing:.08em}
+nav ul a:hover,nav ul a.on{color:var(--text)}
+nav ul a.on{border-bottom:2px solid var(--sky);padding-bottom:2px}
+
+/* 主视觉:星空+天穹边缘线 */
+header.hero{position:relative;overflow:hidden;text-align:center;padding:100px 20px 140px}
+.stars{content:"";position:absolute;inset:0;pointer-events:none;background-image:
+  radial-gradient(1px 1px at 12% 22%,#cfe4ff 60%,transparent),
+  radial-gradient(1px 1px at 31% 8%,#fff 60%,transparent),
+  radial-gradient(1.5px 1.5px at 47% 30%,#bcd8ff 60%,transparent),
+  radial-gradient(1px 1px at 63% 14%,#fff 60%,transparent),
+  radial-gradient(1px 1px at 78% 26%,#cfe4ff 60%,transparent),
+  radial-gradient(1.5px 1.5px at 88% 9%,#fff 60%,transparent),
+  radial-gradient(1px 1px at 22% 44%,#fff 60%,transparent),
+  radial-gradient(1px 1px at 70% 46%,#bcd8ff 60%,transparent),
+  radial-gradient(1px 1px at 55% 55%,#cfe4ff 60%,transparent),
+  radial-gradient(1.2px 1.2px at 8% 60%,#fff 60%,transparent);
+  animation:twinkle 6s ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.55}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.stars{animation:none}}
+.rim{position:absolute;left:0;right:0;bottom:0;height:120px;pointer-events:none;
+  background:radial-gradient(120% 100% at 50% 130%,rgba(255,182,92,.28) 0%,rgba(79,163,255,.10) 45%,transparent 70%)}
+.rim::before{content:"";position:absolute;left:0;right:0;bottom:38px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--dawn) 22%,var(--sky) 50%,var(--dawn) 78%,transparent)}
+h1{font-family:var(--serif);font-weight:700;font-size:clamp(38px,7vw,62px);letter-spacing:.12em;position:relative}
+h1 .en{display:block;font-family:var(--sans);font-weight:400;font-size:clamp(12px,2vw,15px);letter-spacing:.5em;color:var(--muted);margin-top:14px}
+.tagline{position:relative;margin:24px auto 0;max-width:600px;color:var(--muted);font-size:16.5px}
+.addrs{position:relative;margin:32px auto 0;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.addr{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 24px}
+.addr small{display:block;color:var(--muted);font-size:12px;letter-spacing:.15em;margin-bottom:3px}
+.addr code{font-family:var(--mono);font-size:16.5px;color:var(--sky);user-select:all;background:none;border:none;padding:0}
+.cta{position:relative;margin-top:32px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-block;padding:11px 32px;border-radius:8px;font-size:15px;letter-spacing:.14em}
+.btn-solid{background:var(--sky);color:#06111F;font-weight:600}
+.btn-solid:hover{background:var(--dawn);color:#1A1006}
+.btn-ghost{border:1px solid var(--line);color:var(--text)}
+.btn-ghost:hover{border-color:var(--sky);color:var(--sky)}
+
+header.page{max-width:920px;margin:0 auto;padding:60px 20px 8px}
+header.page h1{font-size:clamp(28px,5vw,40px);letter-spacing:.14em;text-align:left}
+header.page p{color:var(--muted);margin-top:10px;font-size:15px}
+header.page h1::after{content:"";display:block;width:52px;height:2px;margin-top:16px;background:linear-gradient(90deg,var(--sky),transparent)}
+
+main{max-width:920px;margin:0 auto;padding:0 20px}
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:none}
+h2{font-family:var(--serif);font-size:26px;letter-spacing:.12em;margin-bottom:8px}
+.sub{color:var(--muted);margin-bottom:32px;font-size:15px}
+h2::after{content:"";display:block;width:44px;height:2px;margin-top:12px;background:linear-gradient(90deg,var(--sky),transparent)}
+
+/* 正文流(不装框) */
+.prose h3{font-family:var(--serif);font-size:17.5px;letter-spacing:.06em;color:var(--sky);margin:30px 0 8px}
+.prose h3:first-child{margin-top:0}
+.prose p{color:var(--body);font-size:15px}
+.prose p+p{margin-top:10px}
+.prose ul{margin:8px 0 0 20px;color:var(--body);font-size:15px}
+.prose li+li{margin-top:6px}
+.prose b{color:var(--text)}
+
+/* 规则列表:细线分隔,不装框 */
+.rulelist{list-style:none}
+.rulelist li{display:flex;gap:18px;padding:16px 4px;border-bottom:1px dashed var(--line);
+  color:var(--body);font-size:15px}
+.rulelist li:last-child{border-bottom:none}
+.rulelist .no{font-family:var(--serif);color:var(--dawn);min-width:26px;font-size:17px}
+
+/* 唯一保留的警示框 */
+.note{margin:26px 0;color:var(--body);font-size:14.5px;border:1px dashed var(--dawn);
+  border-radius:8px;padding:14px 20px;background:rgba(255,182,92,.05)}
+.note b{color:var(--dawn)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:26px 24px}
+.card h3{font-family:var(--serif);font-size:18px;letter-spacing:.06em;color:var(--sky);margin-bottom:10px}
+.card p{color:var(--muted);font-size:14.5px}
+.card p+p{margin-top:8px}
+
+code,kbd{font-family:var(--mono);background:var(--panel);border:1px solid var(--line);
+  padding:1px 7px;border-radius:4px;font-size:13.5px;color:var(--sky)}
+
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;overflow:hidden;font-size:14.5px}
+th,td{text-align:left;padding:10px 16px;border-bottom:1px solid var(--line)}
+th{background:#18223A;color:var(--sky);font-weight:600;letter-spacing:.06em}
+tr:last-child td{border-bottom:none}
+td:first-child{font-family:var(--mono);color:var(--sky);white-space:nowrap;font-size:13.5px}
+td:last-child{color:var(--body)}
+
+footer{border-top:1px solid var(--line);margin-top:56px;padding:40px 20px 56px;text-align:center;color:var(--muted);font-size:13.5px}
+footer .horizon{width:180px;height:1px;margin:0 auto 26px;background:linear-gradient(90deg,transparent,var(--sky),transparent)}
+footer p+p{margin-top:6px}
