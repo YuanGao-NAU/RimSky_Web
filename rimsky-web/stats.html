@@ -221,18 +221,19 @@
         oreSum += v;
         if (v > 0) segs.push({n: o[1], v: v, c: o[2]});
       });
+      // 矿物构成图(服主定稿): 圆环只画十种矿的相互占比——"其他"(石头等围岩)不入图,
+      // 否则永远 90%+ 一环灰把矿挤成发丝。中心大字仍是总挖掘数。
+      // 反作弊读法: 正常构成 = 煤/铁大头、钻石一小角; X-ray 的构成里钻石会肥得反常。
       var miningTotal = (p.mining_total != null ? p.mining_total : oreSum);
-      var other = Math.max(0, miningTotal - oreSum);
-      if (other > 0) segs.push({n: "其他", v: other, c: "#3A4A68"});
-      if (segs.length === 0) segs.push({n: "暂无挖掘记录", v: 1, c: "#3A4A68"});
-      drawDonut(segs, miningTotal);
+      if (segs.length === 0) segs.push({n: "暂无矿物记录", v: 1, c: "#3A4A68"});
+      drawDonut(segs, Math.max(1, oreSum), fmt(miningTotal));
     } else {
       var top = p.mined_top.slice(0, 8);
       var shownSum = top.reduce(function(s, r){ return s + r[1]; }, 0);
       var other = Math.max(0, p.mined_total - shownSum);
       var segs2 = top.map(function(r, i){ return {n: zh(r[0]), v: r[1], c: PALETTE[i]}; });
       if (other > 0) segs2.push({n: "其它", v: other, c: "#3A4A68"});
-      drawDonut(segs2, p.mined_total);
+      drawDonut(segs2, p.mined_total, fmt(p.mined_total));
     }
 
     document.getElementById("advCount").textContent = "共达成 " + p.advancements_done + " 项成就，最近的一批：";
@@ -241,12 +242,13 @@
     }).join("") || '<span style="color:var(--muted)">暂无</span>';
   }
 
-  function drawDonut(segs, total){
+  // segs 的占比按 arcTotal 归一(圆环画满), 中心大字显示 centerText(可以是另一口径的总数)。
+  function drawDonut(segs, arcTotal, centerText){
     var svg = document.getElementById("donut");
     var R = 78, CX = 105, CY = 105, C = 2 * Math.PI * R;
     var html = "", offset = 0;
     segs.forEach(function(s){
-      var frac = total ? s.v / total : 0;
+      var frac = arcTotal ? s.v / arcTotal : 0;
       var len = frac * C;
       html += '<circle r="'+R+'" cx="'+CX+'" cy="'+CY+'" fill="none"'
         + ' stroke="'+s.c+'" stroke-width="30"'
@@ -255,11 +257,11 @@
       offset += len;
     });
     html += '<text x="'+CX+'" y="'+(CY-4)+'" text-anchor="middle" fill="#E8EEF7"'
-      + ' font-family="var(--serif)" font-size="21">'+fmt(total)+'</text>';
+      + ' font-family="var(--serif)" font-size="21">'+centerText+'</text>';
     html += '<text x="'+CX+'" y="'+(CY+18)+'" text-anchor="middle" fill="#93A7C4" font-size="11.5">总挖掘</text>';
     svg.innerHTML = html;
     document.getElementById("legend").innerHTML = segs.map(function(s){
-      var pct = total ? (s.v / total * 100).toFixed(1) : "0.0";
+      var pct = arcTotal ? (s.v / arcTotal * 100).toFixed(1) : "0.0";
       return '<div class="leg"><span class="dot" style="background:'+s.c+'"></span>'
         + '<span class="ln">'+esc(s.n)+'</span><span class="lp">'+pct+'%</span>'
         + '<span class="lv">'+fmt(s.v)+'</span></div>';
