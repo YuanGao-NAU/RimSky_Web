@@ -93,10 +93,11 @@
     </div>
   </div>
   <div class="tiles" id="tiles"></div>
-  <h2 style="margin-top:44px">挖掘分布</h2>
-  <p class="sub">最常挖掘的方块占比</p>
+  <h2 style="margin-top:44px">挖矿数据</h2>
+  <p class="sub">矿物开采分布（可用于自查与识别异常挖掘行为）</p>
+  <div class="ore-line" id="oreLine" style="margin:6px 0 14px;font-size:15px;line-height:1.9"></div>
   <div class="mine-wrap">
-    <svg id="donut" class="donut" width="210" height="210" viewBox="0 0 210 210" role="img" aria-label="挖掘分布图"></svg>
+    <svg id="donut" class="donut" width="210" height="210" viewBox="0 0 210 210" role="img" aria-label="矿物分布图"></svg>
     <div class="legend" id="legend"></div>
   </div>
   <h2 style="margin-top:48px">最近达成的成就</h2>
@@ -108,7 +109,7 @@
 <footer>
   <div class="horizon" aria-hidden="true"></div>
   <p>边缘天空 RimSky Craft · Minecraft Java 版 1.21.11</p>
-  <p>统计数据来自原版世界记录，定时更新。头像服务由 Crafatar 提供。</p>
+  <p>统计数据来自原版世界记录，定时更新。头像服务由 mc-heads.net 提供。</p>
 </footer>
 
 <script src="data/zh_names.js"></script>
@@ -118,8 +119,10 @@
   "use strict";
   var FALLBACK = "data:image/svg+xml," + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56"><rect width="56" height="56" rx="6" fill="#22304B"/><rect x="14" y="14" width="28" height="28" rx="3" fill="#4FA3FF" opacity=".55"/></svg>');
-  function avatar(uuid, size){
-    return "https://crafatar.com/avatars/" + uuid.replace(/-/g,"") + "?size=" + size + "&overlay";
+  // 离线模式服务器: 按玩家名取头像(mc-heads 对未知名字回退 Steve, 永不碎图)。
+  // 旧版走 crafatar 按 UUID 查 -> 离线 UUID 在 Mojang 查无此人, 头像全灭。
+  function avatar(p, size){
+    return "https://mc-heads.net/avatar/" + encodeURIComponent(p.name) + "/" + size;
   }
   var D = window.RIMSTATS;
   if (!D || !D.players) {
@@ -151,7 +154,7 @@
         return !f || p.name.toLowerCase().indexOf(f) >= 0;
       }).map(function(p){
         return '<a class="head" href="stats.html?p='+encodeURIComponent(p.uuid)+'">'
-          + '<img loading="lazy" width="56" height="56" src="'+avatar(p.uuid,56)+'"'
+          + '<img loading="lazy" width="56" height="56" src="'+avatar(p,56)+'"'
           + ' onerror="this.onerror=null;this.src=\''+FALLBACK+'\'" alt="">'
           + '<span class="hn">'+esc(p.name)+'</span>'
           + '<span class="hh">'+p.playtime_hours+' 小时</span></a>';
@@ -167,27 +170,59 @@
     document.getElementById("playerView").classList.remove("hidden");
     document.title = p.name + " · 玩家统计 · 边缘天空";
     var av = document.getElementById("pvAvatar");
-    av.src = avatar(p.uuid, 88);
+    av.src = avatar(p, 88);
     av.onerror = function(){ this.onerror=null; this.src=FALLBACK; };
     document.getElementById("pvName").textContent = p.name;
     document.getElementById("pvMeta").textContent = "最近在线 " + p.last_seen;
 
     var tiles = [
       [p.playtime_hours, "游玩小时"], [p.advancements_done, "成就达成"],
-      [fmt(p.mined_total), "方块挖掘"], [fmt(p.placed_total), "方块使用"],
+      [fmt(p.mining_total != null ? p.mining_total : p.mined_total), "挖掘方块"], [fmt(p.placed_total), "方块使用"],
       [fmt(p.mob_kills), "生物击杀"], [p.deaths, "死亡次数"],
       [p.walk_km + " km", "行走距离"], [p.player_kills, "玩家击杀"]];
     document.getElementById("tiles").innerHTML = tiles.map(function(t){
       return '<div class="tile"><div class="v">'+t[0]+'</div><div class="k">'+t[1]+'</div></div>';
     }).join("");
 
-    // 甜甜圈:前8名+其它
-    var top = p.mined_top.slice(0, 8);
-    var shownSum = top.reduce(function(s, r){ return s + r[1]; }, 0);
-    var other = Math.max(0, p.mined_total - shownSum);
-    var segs = top.map(function(r, i){ return {n: zh(r[0]), v: r[1], c: PALETTE[i]}; });
-    if (other > 0) segs.push({n: "其它", v: other, c: "#3A4A68"});
-    drawDonut(segs, p.mined_total);
+    // 挖矿数据: 矿物分布(固定顺序+固定配色, 便于跨玩家横向对比/识别异常)。
+    // 旧数据文件没有 ores 字段时退回旧视图(导出脚本下次 cron 运行后自愈)。
+    var ORES = [
+      ["diamond","钻石","#4FD8EB"], ["debris","远古残骸","#8B5E3C"],
+      ["emerald","绿宝石","#3ECF6E"], ["gold","金矿","#F5C542"],
+      ["iron","铁矿","#C9CDD4"], ["copper","铜矿","#E07A3F"],
+      ["redstone","红石","#E4574C"], ["lapis","青金石","#3E6BE8"],
+      ["coal","煤矿","#5A6272"], ["quartz","石英","#E8E3DA"]];
+    if (p.ores) {
+      var rare = ["diamond","debris","gold","emerald"];
+      document.getElementById("oreLine").innerHTML = rare.map(function(k){
+        var o = ORES.filter(function(r){ return r[0] === k; })[0];
+        return '<span style="margin-right:18px;white-space:nowrap">'
+          + '<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+o[2]+';margin-right:6px"></span>'
+          + o[1] + ' <b>' + fmt(p.ores[k] || 0) + '</b></span>';
+      }).join("");
+      // 甜甜圈: 十种矿各占比 + "其他"(挖掘类但非矿——石族等)。
+      // 中心总数 = 总体挖矿数量。矿石与石头的比例是最直观的反作弊指标:
+      // 正常挖掘的钻石占比极小, X-ray 玩家的稀有矿占比会异常肥大。
+      var segs = [];
+      var oreSum = 0;
+      ORES.forEach(function(o){
+        var v = p.ores[o[0]] || 0;
+        oreSum += v;
+        if (v > 0) segs.push({n: o[1], v: v, c: o[2]});
+      });
+      var miningTotal = (p.mining_total != null ? p.mining_total : oreSum);
+      var other = Math.max(0, miningTotal - oreSum);
+      if (other > 0) segs.push({n: "其他", v: other, c: "#3A4A68"});
+      if (segs.length === 0) segs.push({n: "暂无挖掘记录", v: 1, c: "#3A4A68"});
+      drawDonut(segs, miningTotal);
+    } else {
+      var top = p.mined_top.slice(0, 8);
+      var shownSum = top.reduce(function(s, r){ return s + r[1]; }, 0);
+      var other = Math.max(0, p.mined_total - shownSum);
+      var segs2 = top.map(function(r, i){ return {n: zh(r[0]), v: r[1], c: PALETTE[i]}; });
+      if (other > 0) segs2.push({n: "其它", v: other, c: "#3A4A68"});
+      drawDonut(segs2, p.mined_total);
+    }
 
     document.getElementById("advCount").textContent = "共达成 " + p.advancements_done + " 项成就，最近的一批：";
     document.getElementById("chips").innerHTML = p.adv_recent.map(function(a){

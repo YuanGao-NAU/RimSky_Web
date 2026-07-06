@@ -56,6 +56,30 @@ def summarize_player(uuid, stats_path, adv_path, name):
     mined_total = sum(mined.values())
     mined_top = sorted(((pretty_key(k), v) for k, v in mined.items()),
                        key=lambda kv: -kv[1])[:12]
+
+    # ---- 挖矿口径统计(网站"挖矿数据"面板的数据源) ----
+    # ores: 按矿种分组计数(同矿种的普通/深板岩/下界变体合并), 用于自查与识别异常挖掘。
+    # mining_total: 只计"挖掘类"方块(石族+矿石), 干草/泥土/建材不算——这才是"挖矿总数"。
+    ORE_GROUPS = {
+        "diamond": ("diamond_ore", "deepslate_diamond_ore"),
+        "debris": ("ancient_debris",),
+        "emerald": ("emerald_ore", "deepslate_emerald_ore"),
+        "gold": ("gold_ore", "deepslate_gold_ore", "nether_gold_ore"),
+        "iron": ("iron_ore", "deepslate_iron_ore"),
+        "copper": ("copper_ore", "deepslate_copper_ore"),
+        "redstone": ("redstone_ore", "deepslate_redstone_ore"),
+        "lapis": ("lapis_ore", "deepslate_lapis_ore"),
+        "coal": ("coal_ore", "deepslate_coal_ore"),
+        "quartz": ("nether_quartz_ore",),
+    }
+    STONE_FAMILY = (
+        "stone", "deepslate", "granite", "diorite", "andesite", "tuff", "calcite",
+        "dripstone_block", "cobblestone", "cobbled_deepslate", "netherrack",
+        "basalt", "blackstone", "end_stone", "sandstone", "red_sandstone")
+    ores = {key: sum(mined.get("minecraft:" + b, 0) for b in blocks)
+            for key, blocks in ORE_GROUPS.items()}
+    mining_total = (sum(ores.values())
+                    + sum(mined.get("minecraft:" + b, 0) for b in STONE_FAMILY))
     # "放置"没有独立分类,方块使用次数是最接近的原版口径
     placed_total = sum(v for k, v in used.items())
 
@@ -90,6 +114,8 @@ def summarize_player(uuid, stats_path, adv_path, name):
         "placed_total": placed_total,
         "advancements_done": adv_done,
         "mined_top": mined_top,
+        "ores": ores,
+        "mining_total": mining_total,
         "adv_recent": adv_recent,
     }
 
