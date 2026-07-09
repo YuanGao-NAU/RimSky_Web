@@ -1,2 +1,5 @@
 # 玩家统计数据：由游戏服务器每小时生成并上传到 Cloudflare R2，不进版本库
 rimsky-web/data/stats_data.js
+
+# R2 上传脚本：含 Cloudflare API Token，禁止提交
+upload_stats.sh
