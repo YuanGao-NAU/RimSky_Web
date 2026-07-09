@@ -1,0 +1,16 @@
+{
+  "name": "边缘天空 RimSky Craft",
+  "short_name": "RimSky",
+  "description": "边缘天空 RimSky Craft — 我的世界 Minecraft Java 版生存服务器，版本 1.21.11，正版登录，北美+中国双线路。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0B1220",
+  "theme_color": "#0B1220",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "64x64", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/img/logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
