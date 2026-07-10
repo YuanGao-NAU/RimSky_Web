@@ -1,0 +1,9 @@
+services:
+  web:
+    image: nginx:alpine
+    container_name: rimsky-web
+    ports:
+      - "80:80"
+    volumes:
+      - ./rimsky-web:/usr/share/nginx/html:ro
+    restart: always

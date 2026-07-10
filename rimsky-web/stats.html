@@ -8,13 +8,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>玩家统计 · 边缘天空 RimSky Craft</title>
 <meta name="description" content="边缘天空 RimSky Craft 玩家统计：游玩时长、成就、挖矿数据与稀有矿物分布，数据每小时更新。">
+<link rel="canonical" href="https://rimsky.letscode.club/stats.html">
+<link rel="manifest" href="site.webmanifest">
 <meta property="og:site_name" content="边缘天空 RimSky Craft">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
 <meta property="og:title" content="玩家统计 · 边缘天空 RimSky Craft">
 <meta property="og:description" content="边缘天空 RimSky Craft 玩家统计：游玩时长、成就、挖矿数据与稀有矿物分布，数据每小时更新。">
 <meta property="og:url" content="https://rimsky.letscode.club/stats.html">
 <meta property="og:image" content="https://rimsky.letscode.club/img/og-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="边缘天空 RimSky Craft — Minecraft 生存服务器">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="玩家统计 · 边缘天空 RimSky Craft">
+<meta name="twitter:description" content="边缘天空 RimSky Craft 玩家统计：游玩时长、成就、挖矿数据与稀有矿物分布，数据每小时更新。">
+<meta name="twitter:image" content="https://rimsky.letscode.club/img/og-card.png">
 <link rel="stylesheet" href="style.css">
 <style>
 .demo-banner{max-width:920px;margin:18px auto -30px;padding:10px 20px;font-size:13.5px;
@@ -124,7 +133,7 @@
 </footer>
 
 <script src="data/zh_names.js"></script>
-<script src="data/stats_data.js"></script>
+<script src="https://cdn.rimsky.letscode.club/stats_data.js"></script>
 <script>
 (function(){
   "use strict";
@@ -164,14 +173,21 @@
     var box = document.getElementById("heads");
     function draw(filter){
       var f = (filter||"").toLowerCase();
-      box.innerHTML = D.players.filter(function(p){
+      // 活跃榜: 最近在线日降序,同日按总时长升序。
+      // 数据源照旧,纯前端重排;同日升序让新面孔自然靠前。
+      var sorted = D.players.slice().sort(function(a,b){
+        var da = a.last_seen || "", db = b.last_seen || "";
+        if (da !== db) return da < db ? 1 : -1;
+        return (a.playtime_hours||0) - (b.playtime_hours||0);
+      });
+      box.innerHTML = sorted.filter(function(p){
         return !f || p.name.toLowerCase().indexOf(f) >= 0;
       }).map(function(p){
         return '<a class="head" href="stats.html?p='+encodeURIComponent(p.uuid)+'">'
           + '<img loading="lazy" width="56" height="56" src="'+avatar(p,56)+'"'
           + ' onerror="this.onerror=null;this.src=\''+FALLBACK+'\'" alt="">'
           + '<span class="hn">'+esc(p.name)+'</span>'
-          + '<span class="hh">'+p.playtime_hours+' 小时</span></a>';
+          + '<span class="hh">'+p.playtime_hours+' 小时 · '+(p.last_seen||'')+'</span></a>';
       }).join("") || '<p style="color:var(--muted)">没有匹配的玩家。</p>';
     }
     draw("");
