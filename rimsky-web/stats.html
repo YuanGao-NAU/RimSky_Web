@@ -33,6 +33,9 @@
   color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px}
 .toolbar input::placeholder{color:var(--muted)}
 .toolbar input:focus{outline:2px solid var(--sky);outline-offset:1px}
+.luckybtn{padding:10px 16px;font-size:15px;font-family:var(--sans);color:var(--text);
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:pointer;white-space:nowrap}
+.luckybtn:hover{outline:2px solid var(--sky);outline-offset:1px}
 .gen{color:var(--muted);font-size:13px}
 /* 头像墙 */
 .heads{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:18px}
@@ -97,7 +100,8 @@
 <main>
 <section id="listView">
   <div class="toolbar">
-    <input id="search" type="search" placeholder="搜索玩家名…" aria-label="搜索玩家名">
+    <input id="search" type="search" placeholder="搜索玩家名或UUID…" aria-label="搜索玩家名或UUID">
+    <button id="lucky" type="button" class="luckybtn" title="随机看一位玩家">随机玩家</button>
     <span class="gen" id="genTime"></span>
   </div>
   <div class="heads" id="heads"></div>
@@ -105,6 +109,7 @@
 
 <section id="playerView" class="hidden">
   <a class="backlink" href="stats.html">← 返回玩家列表</a>
+  <a class="backlink" id="luckyAgain" href="#" style="margin-left:14px">随机再看一位 →</a>
   <div class="pv-top">
     <img id="pvAvatar" alt="" width="88" height="88">
     <div>
@@ -165,6 +170,12 @@
   function fmt(n){ return Number(n).toLocaleString("zh-CN"); }
   function esc(s){ var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
 
+  function gotoRandom(D){
+    if (!D || !D.players || !D.players.length) return;
+    var p = D.players[Math.floor(Math.random() * D.players.length)];
+    location.href = "stats.html?p=" + encodeURIComponent(p.uuid);
+  }
+
   var uuid = new URLSearchParams(location.search).get("p");
   var player = uuid ? D.players.find(function(p){ return p.uuid === uuid; }) : null;
   if (player) renderPlayer(player); else renderList();
@@ -181,21 +192,25 @@
         return (a.playtime_hours||0) - (b.playtime_hours||0);
       });
       box.innerHTML = sorted.filter(function(p){
-        return !f || p.name.toLowerCase().indexOf(f) >= 0;
+        return !f || p.name.toLowerCase().indexOf(f) >= 0
+            || (p.uuid && p.uuid.toLowerCase().indexOf(f) >= 0);
       }).map(function(p){
         return '<a class="head" href="stats.html?p='+encodeURIComponent(p.uuid)+'">'
           + '<img loading="lazy" width="56" height="56" src="'+avatar(p,56)+'"'
           + ' onerror="this.onerror=null;this.src=\''+FALLBACK+'\'" alt="">'
           + '<span class="hn">'+esc(p.name)+'</span>'
-          + '<span class="hh">'+p.playtime_hours+' 小时 · '+(p.last_seen||'')+'</span></a>';
+          + '</a>';
       }).join("") || '<p style="color:var(--muted)">没有匹配的玩家。</p>';
     }
     draw("");
     document.getElementById("search").addEventListener("input", function(e){ draw(e.target.value); });
+    document.getElementById("lucky").addEventListener("click", function(){ gotoRandom(D); });
   }
 
   function renderPlayer(p){
     document.getElementById("listView").classList.add("hidden");
+    var la = document.getElementById("luckyAgain");
+    if (la) la.addEventListener("click", function(ev){ ev.preventDefault(); gotoRandom(D); });
     document.getElementById("listHead").classList.add("hidden");
     document.getElementById("playerView").classList.remove("hidden");
     document.title = p.name + " · 玩家统计 · 边缘天空";
